@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Deepfake Detector</title>
+    <link rel="icon" href="static/k.ico" type="image/x-icon">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f4f7fa 0%, #e8eef5 100%);
+            color: #2c3e50;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            backdrop-filter: blur(4px);
+            padding: 40px;
+            margin-top: 50px;
+            max-width: 700px;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #4e73df, #2e59d9);
+            -webkit-background-clip: text;
+            -moz-background-clip: text;
+            background-clip: text; 
+            color: transparent;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-area {
+            border: 2px dashed #4e73df;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            background: #f8fafc;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            background: #edf2ff;
+            border-color: #2e59d9;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #4e73df;
+            margin-bottom: 1rem;
+        }
+
+        .form-control-file {
+            opacity: 0;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4e73df, #2e59d9);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 89, 217, 0.3);
+        }
+
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .alert-danger {
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4);
+            color: #621b18;
+        }
+
+        .alert-success {
+            background: linear-gradient(45deg, #84fab0, #8fd3f4);
+            color: #1a472a;
+        }
+
+        .result-container {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .uploaded-image {
+            max-width: 100%;
+            border-radius: 12px;
+            margin: 20px auto;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .uploaded-image:hover {
+            transform: scale(1.02);
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 0.9rem;
+            margin-top: 40px;
+            padding: 20px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container fade-in">
+        <h1>Digital Dopplegangers</h1>
+
+        <form method="POST" enctype="multipart/form-data">
+            <div class="upload-area position-relative" role="button">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <h4>Drag and drop your image here</h4>
+                <p class="text-muted">or click to browse files</p>
+                <input type="file" name="file" class="form-control-file" accept="image/*">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+                <i class="fas fa-search mr-2"></i>Analyze Image
+            </button>
+        </form>
+
+        {% if error %}
+            <div class="alert alert-danger fade-in" role="alert">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                {{ error }}
+            </div>
+        {% endif %}
+
+        {% if result %}
+            <div class="result-container fade-in">
+                <h3 class="text-center mb-4">Analysis Results</h3>
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between">
+                        <strong>Real Probability:</strong>
+                        <span>{{ real_percentage }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: {{ real_percentage }}%"></div>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between">
+                        <strong>Fake Probability:</strong>
+                        <span>{{ fake_percentage }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: {{ fake_percentage }}%"></div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <h4>Final Verdict:</h4>
+                    <p class="h5 mb-4">{{ result }}</p>
+                </div>
+            </div>
+
+            {% if uploaded_image %}
+                <div class="text-center fade-in">
+                    <h3 class="mt-4 mb-3">Analyzed Image</h3>
+                    <img src="{{ url_for('static', filename='uploads/' + uploaded_image) }}" alt="Analyzed Image" class="uploaded-image">
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2024 Digital Dopplegangers</p>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
